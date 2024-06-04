@@ -91,7 +91,14 @@ async function run() {
 
     app.post("/wishlist", async (req, res) => {
       const newItem = req.body;
-      const result = await cartCollection.insertOne(newItem);
+      const result = await wishlistCollection.insertOne(newItem);
+      res.send(result);
+    });
+
+    app.delete("/wishlist/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistCollection.deleteOne(query);
       res.send(result);
     });
 
