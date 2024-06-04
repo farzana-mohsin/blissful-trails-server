@@ -89,6 +89,12 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/wishlist", async (req, res) => {
+      const newItem = req.body;
+      const result = await cartCollection.insertOne(newItem);
+      res.send(result);
+    });
+
     // users related API
     app.get("/users", async (req, res) => {
       console.log("user", req.headers);
