@@ -25,6 +25,8 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const packagesCollection = client.db("tourDB").collection("packages");
+    const usersCollection = client.db("tourDB").collection("users");
+    const wishlistCollection = client.db("tourDB").collection("wishlist");
     // package related API
     app.get("/packages", async (req, res) => {
       const result = await packagesCollection.find().toArray();
@@ -50,6 +52,35 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       console.log(query);
       const result = await packagesCollection.findOne(query);
+      res.send(result);
+    });
+
+    // wishlist related api
+
+    app.get("/wishlist", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await wishlistCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // users related API
+    app.get("/users", async (req, res) => {
+      console.log("user", req.headers);
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      // insert email if it doesn't exist
+      const query = { email: user.email };
+      console.log("post users", query, user);
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exists", insertedId: null });
+      }
+      const result = await usersCollection.insertOne(user);
       res.send(result);
     });
 
