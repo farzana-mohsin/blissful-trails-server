@@ -53,6 +53,7 @@ async function run() {
     const usersCollection = client.db("tourDB").collection("users");
     const wishlistCollection = client.db("tourDB").collection("wishlist");
     const tourGuidesCollection = client.db("tourDB").collection("guides");
+    const RequestToAdminCollection = client.db("tourDB").collection("request");
     // package related API
     app.get("/packages", async (req, res) => {
       const result = await packagesCollection.find().toArray();
@@ -123,10 +124,21 @@ async function run() {
       res.send(result);
     });
 
+    // app.post("/admin-request", async (req, res) => {
+    //   const newRequest = req.body;
+    //   const result = await RequestToAdminCollection.insertOne(newRequest);
+    //   res.send(result);
+    // });
+
     // tour guide related api
     app.post("/guides", async (req, res) => {
       const updatedInfo = req.body;
       const result = await tourGuidesCollection.insertOne(updatedInfo);
+      res.send(result);
+    });
+
+    app.get("/guides", async (req, res) => {
+      const result = await tourGuidesCollection.find().toArray();
       res.send(result);
     });
 
