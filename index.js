@@ -52,6 +52,7 @@ async function run() {
     const packagesCollection = client.db("tourDB").collection("packages");
     const usersCollection = client.db("tourDB").collection("users");
     const wishlistCollection = client.db("tourDB").collection("wishlist");
+    const tourGuidesCollection = client.db("tourDB").collection("guides");
     // package related API
     app.get("/packages", async (req, res) => {
       const result = await packagesCollection.find().toArray();
@@ -119,6 +120,13 @@ async function run() {
         return res.send({ message: "user already exists", insertedId: null });
       }
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // tour guide related api
+    app.post("/guides", async (req, res) => {
+      const updatedInfo = req.body;
+      const result = await tourGuidesCollection.insertOne(updatedInfo);
       res.send(result);
     });
 
