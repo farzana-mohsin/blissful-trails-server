@@ -53,7 +53,8 @@ async function run() {
     const usersCollection = client.db("tourDB").collection("users");
     const wishlistCollection = client.db("tourDB").collection("wishlist");
     const tourGuidesCollection = client.db("tourDB").collection("guides");
-    const RequestToAdminCollection = client.db("tourDB").collection("request");
+    const requestToAdminCollection = client.db("tourDB").collection("request");
+    const bookingCollection = client.db("tourDB").collection("booking");
     // package related API
     app.get("/packages", async (req, res) => {
       const result = await packagesCollection.find().toArray();
@@ -124,11 +125,45 @@ async function run() {
       res.send(result);
     });
 
-    // app.post("/admin-request", async (req, res) => {
-    //   const newRequest = req.body;
-    //   const result = await RequestToAdminCollection.insertOne(newRequest);
-    //   res.send(result);
-    // });
+    // admin related api
+    app.get("/request-to-admin", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await requestToAdminCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/request-to-admin", async (req, res) => {
+      const newRequest = req.body;
+      const result = await requestToAdminCollection.insertOne(newRequest);
+      res.send(result);
+    });
+
+    app.get("/pending-requests", async (req, res) => {
+      const query = { status: { $eq: "pending" } };
+      const result = await requestToAdminCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.patch("/pending-requests", async (req, res) => {
+      const email = req.query.email;
+      const filter = { email: email };
+      const updatedRequest = req.body;
+      console.log(updatedRequest);
+
+      const updateDoc = {
+        $set: {
+          status: updatedRequest.status,
+          destination: updatedRequest.destination,
+        },
+      };
+
+      const result = await requestToAdminCollection.updateOne(
+        filter,
+        updateDoc
+      );
+      res.send(result);
+    });
 
     // tour guide related api
     app.post("/guides", async (req, res) => {
@@ -139,6 +174,31 @@ async function run() {
 
     app.get("/guides", async (req, res) => {
       const result = await tourGuidesCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/guides/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      console.log(query);
+      const result = await tourGuidesCollection.findOne(query);
+      res.send(result);
+    });
+
+    // booking related api
+
+    app.get("/bookings", async (req, res) => {
+      const email = req.query.email;
+      const query = { "tourist.email": email };
+      console.log("/bookings GET query", query);
+      const result = await bookingCollection.find(query).toArray();
+      console.log("/bookings GET result", result);
+      res.send(result);
+    });
+
+    app.post("/bookings", async (req, res) => {
+      const newBooking = req.body;
+      const result = await bookingCollection.insertOne(newBooking);
       res.send(result);
     });
 
