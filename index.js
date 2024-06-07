@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 // const jwt = require("jsonwebtoken");
@@ -205,7 +206,7 @@ async function run() {
         query = { guides: email, status: { $ne: "canceled" } };
       } else {
         // for tourist
-        query = { "tourist.email": email };
+        query = { "tourist.email": email, status: { $ne: "canceled" } };
       }
 
       console.log("/bookings GET query", query);
@@ -242,6 +243,18 @@ async function run() {
 
       const result = await bookingCollection.updateOne(filter, updateDoc);
       res.send(result);
+    });
+
+    // payment intent
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseFloat(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
     });
 
     // Connect the client to the server	(optional starting in v4.7)
