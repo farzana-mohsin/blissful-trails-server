@@ -34,8 +34,8 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// const uri = "mongodb://localhost:27017";
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster81657.uygasmd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster81657`;
+const uri = "mongodb://localhost:27017";
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster81657.uygasmd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster81657`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -201,9 +201,11 @@ async function run() {
 
       let query = {};
       if (status) {
-        query = { "tourist.email": email, status: { $ne: "rejected" } };
+        // for guide
+        query = { guides: email, status: { $ne: "canceled" } };
       } else {
-        query = { "tourist.email": email, status: { $ne: "rejected" } };
+        // for tourist
+        query = { "tourist.email": email };
       }
 
       console.log("/bookings GET query", query);
@@ -215,6 +217,14 @@ async function run() {
     app.post("/bookings", async (req, res) => {
       const newBooking = req.body;
       const result = await bookingCollection.insertOne(newBooking);
+      res.send(result);
+    });
+
+    app.delete("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      console.log("delete query for booking", query);
+      const result = await bookingCollection.deleteOne(query);
       res.send(result);
     });
 
