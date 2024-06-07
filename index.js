@@ -189,7 +189,15 @@ async function run() {
 
     app.get("/bookings", async (req, res) => {
       const email = req.query.email;
-      const query = { "tourist.email": email };
+      const status = req.query.status;
+
+      let query = {};
+      if (status) {
+        query = { "tourist.email": email, status: { $ne: "rejected" } };
+      } else {
+        query = { "tourist.email": email, status: { $ne: "rejected" } };
+      }
+
       console.log("/bookings GET query", query);
       const result = await bookingCollection.find(query).toArray();
       console.log("/bookings GET result", result);
