@@ -199,6 +199,8 @@ async function run() {
     app.get("/bookings", async (req, res) => {
       const email = req.query.email;
       const status = req.query.status;
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
 
       let query = {};
       if (status) {
@@ -210,9 +212,18 @@ async function run() {
       }
 
       console.log("/bookings GET query", query);
-      const result = await bookingCollection.find(query).toArray();
+      const result = await bookingCollection
+        .find(query)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       console.log("/bookings GET result", result);
       res.send(result);
+    });
+
+    app.get("/bookings-count", async (req, res) => {
+      const count = await bookingCollection.estimatedDocumentCount();
+      res.send({ count });
     });
 
     app.post("/bookings", async (req, res) => {
@@ -254,6 +265,10 @@ async function run() {
         amount: amount,
         currency: "usd",
         payment_method_types: ["card"],
+      });
+      console.log("amount inside the intent", amount);
+      res.send({
+        clientSecret: paymentIntent.client_secret,
       });
     });
 
