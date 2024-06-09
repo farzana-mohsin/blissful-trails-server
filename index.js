@@ -335,6 +335,13 @@ async function run() {
       const result = await storiesCollection.insertOne(newStory);
       res.send(result);
     });
+    app.get("/stories/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      console.log(query);
+      const result = await storiesCollection.findOne(query);
+      res.send(result);
+    });
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
