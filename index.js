@@ -28,7 +28,9 @@ const verifyToken = (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: "unauthorized access" });
+      return res
+        .status(401)
+        .send({ message: "unauthorized access due to decoding error" });
     }
     req.decoded = decoded;
     next();
@@ -64,6 +66,7 @@ async function run() {
     const tourGuidesCollection = client.db("tourDB").collection("guides");
     const requestToAdminCollection = client.db("tourDB").collection("request");
     const bookingCollection = client.db("tourDB").collection("booking");
+    const storiesCollection = client.db("tourDB").collection("stories");
     // package related API
     app.get("/packages", async (req, res) => {
       const result = await packagesCollection.find().toArray();
@@ -134,6 +137,47 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/request-to-admin/admin", verifyToken, async (req, res) => {
+      const email = req.query.email;
+
+      if (!req?.decoded?.email) {
+        return res.status(403).send({ message: "no email found in decoded" });
+      }
+
+      if (email !== req?.decoded?.email) {
+        console.log("email", email, req?.decoded?.email);
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      const query = { email: email };
+      const user = await requestToAdminCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user.role === "admin";
+      }
+
+      res.send({ admin });
+    });
+
+    app.get("/request-to-admin/guide", verifyToken, async (req, res) => {
+      const email = req.query.email;
+
+      if (!req?.decoded?.email) {
+        return res.status(403).send({ message: "no email found in decoded" });
+      }
+
+      if (email !== req?.decoded?.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      const query = { email: email };
+      const user = await requestToAdminCollection.findOne(query);
+      let guide = false;
+      if (user) {
+        guide = user.role === "guide";
+      }
+
+      res.send({ guide });
+    });
+
     // admin related api
     app.get("/request-to-admin", async (req, res) => {
       const email = req.query.email;
@@ -163,7 +207,7 @@ async function run() {
       const updateDoc = {
         $set: {
           status: updatedRequest.status,
-          destination: updatedRequest.destination,
+          role: updatedRequest.role,
         },
       };
 
@@ -175,14 +219,14 @@ async function run() {
     });
 
     // tour guide related api
-    app.post("/guides", async (req, res) => {
-      const updatedInfo = req.body;
-      const result = await tourGuidesCollection.insertOne(updatedInfo);
+    app.get("/guides", async (req, res) => {
+      const result = await tourGuidesCollection.find().toArray();
       res.send(result);
     });
 
-    app.get("/guides", async (req, res) => {
-      const result = await tourGuidesCollection.find().toArray();
+    app.post("/guides", async (req, res) => {
+      const updatedInfo = req.body;
+      const result = await tourGuidesCollection.insertOne(updatedInfo);
       res.send(result);
     });
 
@@ -224,6 +268,13 @@ async function run() {
     app.get("/bookings-count", async (req, res) => {
       const count = await bookingCollection.estimatedDocumentCount();
       res.send({ count });
+    });
+
+    app.get("/bookings-count-test", async (req, res) => {
+      const email = req.query.email;
+      const query = { "tourist.email": email };
+      const count = await bookingCollection.find(query).toArray();
+      res.send({ count: count.length });
     });
 
     app.post("/bookings", async (req, res) => {
@@ -270,6 +321,19 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // tourist stories
+
+    app.get("/stories", async (req, res) => {
+      const result = await storiesCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/stories", async (req, res) => {
+      const newStory = req.body;
+      const result = await storiesCollection.insertOne(newStory);
+      res.send(result);
     });
 
     // Connect the client to the server	(optional starting in v4.7)
