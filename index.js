@@ -37,8 +37,8 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-const uri = "mongodb://localhost:27017";
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster81657.uygasmd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster81657`;
+// const uri = "mongodb://localhost:27017";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster81657.uygasmd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster81657`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -97,20 +97,20 @@ async function run() {
 
     // wishlist related api
 
-    app.get("/wishlist", async (req, res) => {
+    app.get("/wishlist", verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.post("/wishlist", async (req, res) => {
+    app.post("/wishlist", verifyToken, async (req, res) => {
       const newItem = req.body;
       const result = await wishlistCollection.insertOne(newItem);
       res.send(result);
     });
 
-    app.delete("/wishlist/:id", async (req, res) => {
+    app.delete("/wishlist/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await wishlistCollection.deleteOne(query);
@@ -186,7 +186,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/request-to-admin", async (req, res) => {
+    app.post("/request-to-admin", verifyToken, async (req, res) => {
       const newRequest = req.body;
       const result = await requestToAdminCollection.insertOne(newRequest);
       res.send(result);
@@ -198,7 +198,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/pending-requests", async (req, res) => {
+    app.patch("/pending-requests", verifyToken, async (req, res) => {
       const email = req.query.email;
       const filter = { email: email };
       const updatedRequest = req.body;
@@ -224,13 +224,13 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/guides", async (req, res) => {
+    app.post("/guides", verifyToken, async (req, res) => {
       const updatedInfo = req.body;
       const result = await tourGuidesCollection.insertOne(updatedInfo);
       res.send(result);
     });
 
-    app.get("/guides/:id", async (req, res) => {
+    app.get("/guides/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       console.log(query);
@@ -330,7 +330,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/stories", async (req, res) => {
+    app.post("/stories", verifyToken, async (req, res) => {
       const newStory = req.body;
       const result = await storiesCollection.insertOne(newStory);
       res.send(result);
